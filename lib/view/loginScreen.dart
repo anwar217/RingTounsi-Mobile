@@ -90,12 +90,6 @@ class LoginScreen extends StatelessWidget {
                     GestureDetector(
                       onTap: () {
                         // Redirect to FirstScreen when tapped
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => FirstScreen(),
-                          ),
-                        );
                       },
                       child: Container(
                         height: 55,
