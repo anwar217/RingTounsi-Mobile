@@ -16,12 +16,7 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = jsonDecode(response.body);
-      return User(
-          id: data['id'],
-          nom: data['nom'],
-          prenom: data['prenom'],
-          email: data['email'],
-          role: data['role']);
+      return User.fromJson(data); // Utilisez la méthode User.fromJson pour désérialiser l'utilisateur
     } else {
       return null;
     }

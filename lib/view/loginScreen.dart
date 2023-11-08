@@ -1,9 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:ringtounsi_mobile/view/regScreen.dart';
-import 'package:ringtounsi_mobile/view/firstScreen.dart'; // Import your FirstScreen file
+import 'package:ringtounsi_mobile/view/firstScreen.dart';
+
+import '../viewmodel/login_view_model.dart';
+
 
 class LoginScreen extends StatelessWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+   LoginScreen({Key? key}) : super(key: key);
+
+  final LoginViewModel loginViewModel = LoginViewModel();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
+  Future<void> handleLogin() async {
+    final email = emailController.text;
+    final password = passwordController.text;
+
+    final user = await loginViewModel.login(email, password);
+
+    if (user != null) {
+      // Connexion réussie, effectuez ici des actions supplémentaires.
+    } else {
+      // Gérez les erreurs de connexion ici.
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +67,8 @@ class LoginScreen extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const TextField(
+                    TextField(
+                      controller: emailController,
                       decoration: InputDecoration(
                         suffixIcon: Icon(
                           Icons.check,
@@ -60,7 +81,8 @@ class LoginScreen extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const TextField(
+                    TextField(
+                      controller: passwordController,
                       obscureText: true,
                       decoration: InputDecoration(
                         suffixIcon: Icon(
@@ -89,13 +111,7 @@ class LoginScreen extends StatelessWidget {
                     const SizedBox(height: 70),
                     GestureDetector(
                       onTap: () {
-                        // Redirect to FirstScreen when tapped
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => FirstScreen(),
-                          ),
-                        );
+                        handleLogin();
                       },
                       child: Container(
                         height: 55,
@@ -134,7 +150,6 @@ class LoginScreen extends StatelessWidget {
                           ),
                           GestureDetector(
                             onTap: () {
-                              // Redirect to the registration page
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -153,7 +168,7 @@ class LoginScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                    )
+                    ),
                   ],
                 ),
               ),

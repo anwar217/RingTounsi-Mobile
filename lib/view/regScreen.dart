@@ -1,5 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart';
+import 'package:ringtounsi_mobile/model/user.dart';
 import 'package:ringtounsi_mobile/view/loginScreen.dart';
+import 'dart:io';
+import 'package:http/http.dart' as http;
 
 enum Role { coach, athlete }
 
@@ -12,6 +17,35 @@ class RegScreen extends StatefulWidget {
 
 class _RegScreenState extends State<RegScreen> {
   Role _selectedRole = Role.athlete;
+
+  final fullNameController = TextEditingController();
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+
+  Future<void> register(String nom, String prenom, email, String password, Role role) async {
+    final url = Uri.parse('http://192.168.188.65:3000/api/auth/signup');
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'nom': nom,
+        'prenom' :prenom,
+        'email': email,
+        'password': password,
+        'roles': [role.toString()],
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      // Inscription réussie, vous pouvez gérer la redirection ou afficher un message ici.
+      print('Inscription réussie');
+    } else {
+      // Gérez les erreurs d'inscription ici.
+      print('Erreur lors de l\'inscription');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,62 +92,60 @@ class _RegScreenState extends State<RegScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // TextFields for Full Name, Phone or Gmail, Password, Confirm Password
-                    const TextField(
+                    TextField(
+                      controller: fullNameController,
                       decoration: InputDecoration(
-                          suffixIcon: Icon(
-                            Icons.check,
-                            color: Colors.grey,
-                          ),
-                          label: Text(
-                            'Full Name',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xffB81736),
-                            ),
-                          )),
+                        suffixIcon: Icon(
+                          Icons.check,
+                          color: Colors.grey,
+                        ),
+                        labelText: 'Full Name',
+                        hintStyle: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xffB81736),
+                        ),
+                      ),
                     ),
-                    const TextField(
+                    TextField(
+                      controller: emailController,
                       decoration: InputDecoration(
-                          suffixIcon: Icon(
-                            Icons.check,
-                            color: Colors.grey,
-                          ),
-                          label: Text(
-                            'Phone or Gmail',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xffB81736),
-                            ),
-                          )),
+                        suffixIcon: Icon(
+                          Icons.check,
+                          color: Colors.grey,
+                        ),
+                        labelText: 'Phone or Gmail',
+                        hintStyle: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xffB81736),
+                        ),
+                      ),
                     ),
-                    const TextField(
+                    TextField(
+                      controller: passwordController,
                       decoration: InputDecoration(
-                          suffixIcon: Icon(
-                            Icons.visibility_off,
-                            color: Colors.grey,
-                          ),
-                          label: Text(
-                            'Password',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xffB81736),
-                            ),
-                          )),
+                        suffixIcon: Icon(
+                          Icons.visibility_off,
+                          color: Colors.grey,
+                        ),
+                        labelText: 'Password',
+                        hintStyle: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xffB81736),
+                        ),
+                      ),
                     ),
-                    const TextField(
+                    TextField(
                       decoration: InputDecoration(
-                          suffixIcon: Icon(
-                            Icons.visibility_off,
-                            color: Colors.grey,
-                          ),
-                          label: Text(
-                            'Conform Password',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xffB81736),
-                            ),
-                          )),
+                        suffixIcon: Icon(
+                          Icons.visibility_off,
+                          color: Colors.grey,
+                        ),
+                        labelText: 'Confirm Password',
+                        hintStyle: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xffB81736),
+                        ),
+                      ),
                     ),
                     SizedBox(height: 20),
                     Container(
@@ -125,8 +157,7 @@ class _RegScreenState extends State<RegScreen> {
                       child: DropdownButton<Role>(
                         value: _selectedRole,
                         underline: Container(), // Hides the underline
-                        icon: Icon(Icons.arrow_drop_down,
-                            color: Color.fromARGB(255, 0, 0, 0)),
+                        icon: Icon(Icons.arrow_drop_down, color: Color.fromARGB(255, 0, 0, 0)),
                         style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
                         onChanged: (Role? value) {
                           if (value != null) {
@@ -147,31 +178,20 @@ class _RegScreenState extends State<RegScreen> {
                         ],
                       ),
                     ),
-
                     SizedBox(height: 20),
-                    Container(
-                      height: 55,
-                      width: 300,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(30),
-                        gradient: const LinearGradient(
-                          colors: [
-                            Color(0xffB81736),
-                            Color(0xff281537),
-                          ],
-                        ),
-                      ),
-                      child: const Center(
-                        child: Text(
-                          'SIGN IN',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 20,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
+                   ElevatedButton(
+  onPressed: () {
+    String nom = fullNameController.text;
+    String prenom = fullNameController.text;
+    String email = emailController.text;
+    String password = passwordController.text;
+
+    // Utilisez le rôle sélectionné (_selectedRole) pour l'inscription
+    register(nom,prenom, email, password, _selectedRole );
+  },
+  child: Text('S\'INSCRIRE'),
+
+                       ),
                     SizedBox(height: 80),
                     Align(
                       alignment: Alignment.bottomRight,
