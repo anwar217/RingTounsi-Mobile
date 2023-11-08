@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:ringtounsi_mobile/model/user.dart';
 
 class ApiService {
-  final String baseUrl = 'http://localhost:3000';
+  final String baseUrl = 'http://localhost:5000';
 
   Future<User?> login(String email, String password) async {
     final response = await http.post(

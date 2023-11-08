@@ -23,7 +23,7 @@ class _RegScreenState extends State<RegScreen> {
   final passwordController = TextEditingController();
 
   Future<void> register(String nom, String prenom, email, String password, Role role) async {
-    final url = Uri.parse('http://192.168.188.65:3000/api/auth/signup');
+    final url = Uri.parse('http://localhost:5000/api/auth/signup');
     final response = await http.post(
       url,
       headers: {
