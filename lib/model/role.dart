@@ -1,5 +1,5 @@
 class Role {
-  final int id;
+  final int id; // Add the id property
   final String name;
 
   Role({
