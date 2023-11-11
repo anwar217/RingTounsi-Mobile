@@ -1,11 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:ringtounsi_mobile/model/user.dart';
-import 'package:ringtounsi_mobile/model/user_roles.dart';
 import 'package:ringtounsi_mobile/view/loginScreen.dart';
 import 'package:http/http.dart' as http;
-
-enum Role { coach, athlete }
 
 class RegScreen extends StatefulWidget {
   const RegScreen({Key? key}) : super(key: key);
@@ -15,57 +11,40 @@ class RegScreen extends StatefulWidget {
 }
 
 class _RegScreenState extends State<RegScreen> {
-  Role _selectedRole = Role.athlete;
+  int _selectedRoleId = 1; // Par défaut, l'ID du rôle "Athlete"
 
   final fullNameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
-  Future<User> createUserWithRole(int userId, String nom, String prenom, String email, String password, int roleId) async {
-    UserRole userRole = UserRole(roleId:roleId, userId: userId);
+  Future<void> registerUser(String nom, String prenom, String email, String password, int roleId) async {
+    const apiUrl = 'http://localhost:5000/api/auth/signup';
 
-    User user = User(
-      id: userId,
-      nom: nom,
-      prenom: prenom,
-      email: email,
-      password: password,
-      userRole: userRole,
-    );
+    try {
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'nom': nom,
+          'prenom': prenom,
+          'email': email,
+          'password': password,
+          'roleId': roleId,
+        }),
+      );
 
-    return user;
+      if (response.statusCode == 200) {
+        // L'inscription a réussi
+        print('Inscription réussie');
+
+      } else {
+        // L'inscription a échoué
+        print('Échec de l\'inscription. Code de statut: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Erreur lors de la connexion au serveur: $e');
+    }
   }
-
-  Future<void> register(String nom, String prenom, String email, String password, int roleId) async {
-    final url = Uri.parse('http://localhost:5000/api/auth/signup');
-    final response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'nom': nom,
-        'prenom': prenom,
-        'email': email,
-        'password': password,
-        'roleId': roleId,
-      }),
-    );
-
-   if (response.statusCode == 200) {
-  final responseData = jsonDecode(response.body);
-  final id = responseData['id'];
-
-  if (id != null) {
-     createUserWithRole(id, nom, prenom, email, password, roleId);
-  } else {
-    print('L\'ID de l\'utilisateur est nul.');
-  }
-} else {
-  print('Erreur lors de l\'inscription');
-}
-  }
-
 
   @override
   Widget build(BuildContext context) {
@@ -174,63 +153,50 @@ class _RegScreenState extends State<RegScreen> {
                         borderRadius: BorderRadius.circular(30),
                         color: const Color(0xffB81736),
                       ),
-                      child: DropdownButton<Role>(
-                        value: _selectedRole,
+                      child: DropdownButton<int>(
+                        value: _selectedRoleId,
                         underline: Container(), // Hides the underline
                         icon: Icon(Icons.arrow_drop_down, color: Color.fromARGB(255, 0, 0, 0)),
                         style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
-                        onChanged: (Role? value) {
-  if (value != null) {
-    setState(() {
-      _selectedRole = value;
-    });
-  }
-},
-
+                        onChanged: (int? value) {
+                          if (value != null) {
+                            setState(() {
+                              _selectedRoleId = value;
+                            });
+                          }
+                        },
                         items: [
-                          DropdownMenuItem<Role>(
-                            value: Role.athlete,
+                          DropdownMenuItem<int>(
+                            value: 1,
                             child: Text('Athlete'),
                           ),
-                          DropdownMenuItem<Role>(
-                            value: Role.coach,
+                          DropdownMenuItem<int>(
+                            value: 2,
                             child: Text('Coach'),
+                          ),
+                          DropdownMenuItem<int>(
+                            value: 3,
+                            child: Text('Admin'),
                           ),
                         ],
                       ),
                     ),
-                    SizedBox(height: 20),
-                   ElevatedButton(
-  onPressed: () {
-  String fullName = fullNameController.text;
-  List<String> nameParts = fullName.split(' ');
-  if (nameParts.length == 2) {
-    String nom = nameParts[0];
-    String prenom = nameParts[1];
-    String email = emailController.text;
-    String password = passwordController.text;
+                    ElevatedButton(
+                      onPressed: () {
+                        String fullName = fullNameController.text;
+                        List<String> nameParts = fullName.split(' ');
 
-    Role selectedRole = _selectedRole;
+                        if (nameParts.length == 2) {
+                          String nom = nameParts[0];
+                          String prenom = nameParts[1];
+                          String email = emailController.text;
+                          String password = passwordController.text;
 
-// Vérifiez le rôle sélectionné et attribuez l'ID du rôle en conséquence
-int roleId;
-if (selectedRole == Role.coach) {
-  roleId = 2; // ID du rôle "coach"
-} else {
-  roleId = 1; // ID du rôle "athlete" (ou autre rôle par défaut si nécessaire)
-}
-
-    // Utilisez le rôle sélectionné (_selectedRole) pour l'inscription
-    register(nom, prenom, email, password, roleId);
-  } else {
-    // Gérez le cas où le nom complet n'est pas correctement formaté (nom et prénom séparés par un espace).
-    // Vous pouvez afficher un message d'erreur à l'utilisateur.
-  }
-
-},
-  child: Text('Sinscrire')
-                   ),
-
+                          registerUser(nom, prenom, email, password, _selectedRoleId);
+                        }
+                      },
+                      child: Text('S\'inscrire'),
+                    ),
                     SizedBox(height: 80),
                     Align(
                       alignment: Alignment.bottomRight,
@@ -265,7 +231,7 @@ if (selectedRole == Role.coach) {
                           ),
                         ],
                       ),
-                    )
+                    ),
                   ],
                 ),
               ),
