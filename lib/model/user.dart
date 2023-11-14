@@ -1,22 +1,25 @@
-import 'package:ringtounsi_mobile/model/user_roles.dart';
-
 class User {
-  final int id;
-  final String nom;
-  final String prenom;
-  final String email;
-  final String password;
-  final UserRole userRole; // Faites référence à UserRole pour représenter le rôle de l'utilisateur
+  int? id; // Make id nullable if it can be null
+  late String nom; // Use 'late' if you initialize it later
+  late String prenom;
+  late String email;
+  late String password;
+  late DateTime dateInscription;
+  late String role;
 
   User({
-    required this.id,
-    required this.nom,
+    this.id,
+    required this.nom, // Use the 'required' modifier
     required this.prenom,
     required this.email,
     required this.password,
-    required this.userRole, // Utilisez UserRole pour représenter le rôle de l'utilisateur
+    required this.dateInscription,
+    required this.role,
   });
 
+  // Factory method, toJson, and fromJson remain the same
+
+  // Méthode pour créer une instance de User à partir d'une Map
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
       id: json['id'],
@@ -24,7 +27,21 @@ class User {
       prenom: json['prenom'],
       email: json['email'],
       password: json['password'],
-      userRole: UserRole.fromJson(json['userRole']),  // Utilisez UserRole.fromJson pour désérialiser le rôle
+      dateInscription: DateTime.parse(json['date_inscription']),
+      role: json['role'],
     );
+  }
+
+  // Méthode pour convertir l'instance de User en une Map
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'nom': nom,
+      'prenom': prenom,
+      'email': email,
+      'password': password,
+      'date_inscription': dateInscription.toIso8601String(),
+      'role': role,
+    };
   }
 }

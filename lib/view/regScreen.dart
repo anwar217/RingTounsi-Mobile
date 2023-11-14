@@ -11,40 +11,49 @@ class RegScreen extends StatefulWidget {
 }
 
 class _RegScreenState extends State<RegScreen> {
-  int _selectedRoleId = 1; // Par défaut, l'ID du rôle "Athlete"
 
-  final fullNameController = TextEditingController();
+   String _selectedRole= "Athlete";
+  final NameController = TextEditingController();
+  final prenomController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
+    bool _registrationSuccessful = false;
+  Future<void> registerUser(String nom, String prenom, String email, String password, String role) async {
+  const apiUrl = 'http://localhost:3000/api/v1/users'; // Make sure to include the protocol (http) in the URL
 
-  Future<void> registerUser(String nom, String prenom, String email, String password, int roleId) async {
-    const apiUrl = 'http://localhost:5000/api/auth/signup';
+  try {
+    final response = await http.post(
+      Uri.parse(apiUrl),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'nom': nom,
+        'prenom': prenom,
+        'email': email,
+        'password': password,
+        'confirm_password': password,
+        'role': role,
+        'date_inscription': DateTime.now().toIso8601String(),
+      }),
+    );
 
-    try {
-      final response = await http.post(
-        Uri.parse(apiUrl),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'nom': nom,
-          'prenom': prenom,
-          'email': email,
-          'password': password,
-          'roleId': roleId,
-        }),
-      );
+   if (response.statusCode == 201) {
+        print('Registration successful');
+        _registrationSuccessful = true;
+   
+} else {
+  print('Registration failed. Status code: ${response.statusCode}');
+  print('Error message: ${response.body}');
+  _registrationSuccessful = false;
+  // You can display an error message to the user here.
+}
 
-      if (response.statusCode == 200) {
-        // L'inscription a réussi
-        print('Inscription réussie');
-
-      } else {
-        // L'inscription a échoué
-        print('Échec de l\'inscription. Code de statut: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Erreur lors de la connexion au serveur: $e');
-    }
+  } catch (e) {
+    print('Error connecting to the server: $e');
+     _registrationSuccessful = false;
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -92,13 +101,27 @@ class _RegScreenState extends State<RegScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     TextField(
-                      controller: fullNameController,
+                      controller: NameController,
                       decoration: InputDecoration(
                         suffixIcon: Icon(
                           Icons.check,
                           color: Colors.grey,
                         ),
-                        labelText: 'Full Name',
+                        labelText: 'Name',
+                        hintStyle: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xffB81736),
+                        ),
+                      ),
+                    ),
+                    TextField(
+                      controller: prenomController,
+                      decoration: InputDecoration(
+                        suffixIcon: Icon(
+                          Icons.check,
+                          color: Colors.grey,
+                        ),
+                        labelText: 'Prenom',
                         hintStyle: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: Color(0xffB81736),
@@ -145,6 +168,7 @@ class _RegScreenState extends State<RegScreen> {
                           color: Color(0xffB81736),
                         ),
                       ),
+                      controller: confirmPasswordController, // Add this line
                     ),
                     SizedBox(height: 20),
                     Container(
@@ -153,50 +177,67 @@ class _RegScreenState extends State<RegScreen> {
                         borderRadius: BorderRadius.circular(30),
                         color: const Color(0xffB81736),
                       ),
-                      child: DropdownButton<int>(
-                        value: _selectedRoleId,
+                      child: DropdownButton<String>(
+                        value: _selectedRole,
                         underline: Container(), // Hides the underline
                         icon: Icon(Icons.arrow_drop_down, color: Color.fromARGB(255, 0, 0, 0)),
                         style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
-                        onChanged: (int? value) {
-                          if (value != null) {
+                        onChanged: (String? value) {
+                          if (value != "") {
                             setState(() {
-                              _selectedRoleId = value;
+                              _selectedRole = value!;
                             });
                           }
                         },
                         items: [
-                          DropdownMenuItem<int>(
-                            value: 1,
+                          DropdownMenuItem<String>(
+                            value: "Athlete",
                             child: Text('Athlete'),
                           ),
-                          DropdownMenuItem<int>(
-                            value: 2,
+                          DropdownMenuItem<String>(
+                            value: "Coach",
                             child: Text('Coach'),
                           ),
-                          DropdownMenuItem<int>(
-                            value: 3,
+                          DropdownMenuItem<String>(
+                            value: "Admin",
                             child: Text('Admin'),
                           ),
                         ],
                       ),
                     ),
-                    ElevatedButton(
-                      onPressed: () {
-                        String fullName = fullNameController.text;
-                        List<String> nameParts = fullName.split(' ');
+                   ElevatedButton(
+  onPressed: () async {
+    String nom = NameController.text;
+    String prenom = prenomController.text;
+    String email = emailController.text;
+    String password = passwordController.text;
+    String confirmPassword = confirmPasswordController.text;
 
-                        if (nameParts.length == 2) {
-                          String nom = nameParts[0];
-                          String prenom = nameParts[1];
-                          String email = emailController.text;
-                          String password = passwordController.text;
+    if (password == confirmPassword) {
+      // Passwords match, proceed with registration
+      await registerUser(nom, prenom, email, password, _selectedRole);
 
-                          registerUser(nom, prenom, email, password, _selectedRoleId);
-                        }
-                      },
-                      child: Text('S\'inscrire'),
-                    ),
+      // Check if the registration was successful before navigating
+      if (_registrationSuccessful) {
+        print('Registration successful. Navigating to login page.');
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => LoginScreen(),
+          ),
+        );
+      } else {
+        // If registration failed, show an error message or handle accordingly
+        print('Registration failed');
+      }
+    } else {
+      // Passwords don't match, show an error message or handle accordingly
+      print('Passwords do not match');
+    }
+  },
+  child: Text('S\'inscrire'),
+),
+
                     SizedBox(height: 80),
                     Align(
                       alignment: Alignment.bottomRight,
